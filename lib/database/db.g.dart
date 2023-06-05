@@ -236,14 +236,20 @@ class $ChargeOrderTable extends ChargeOrder
   static const VerificationMeta _drivingDistanceMeta =
       const VerificationMeta('drivingDistance');
   @override
-  late final GeneratedColumn<int> drivingDistance = GeneratedColumn<int>(
+  late final GeneratedColumn<double> drivingDistance = GeneratedColumn<double>(
       'driving_distance', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
-  static const VerificationMeta _powerRemainMeta =
-      const VerificationMeta('powerRemain');
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _powerBeforeChargeMeta =
+      const VerificationMeta('powerBeforeCharge');
   @override
-  late final GeneratedColumn<int> powerRemain = GeneratedColumn<int>(
-      'power_remain', aliasedName, false,
+  late final GeneratedColumn<int> powerBeforeCharge = GeneratedColumn<int>(
+      'power_before_charge', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _powerAfterChargeMeta =
+      const VerificationMeta('powerAfterCharge');
+  @override
+  late final GeneratedColumn<int> powerAfterCharge = GeneratedColumn<int>(
+      'power_after_charge', aliasedName, false,
       type: DriftSqlType.int, requiredDuringInsert: true);
   static const VerificationMeta _chargeAmountMeta =
       const VerificationMeta('chargeAmount');
@@ -276,7 +282,8 @@ class $ChargeOrderTable extends ChargeOrder
         id,
         carId,
         drivingDistance,
-        powerRemain,
+        powerBeforeCharge,
+        powerAfterCharge,
         chargeAmount,
         chargePrice,
         steelConsumption,
@@ -308,13 +315,21 @@ class $ChargeOrderTable extends ChargeOrder
     } else if (isInserting) {
       context.missing(_drivingDistanceMeta);
     }
-    if (data.containsKey('power_remain')) {
+    if (data.containsKey('power_before_charge')) {
       context.handle(
-          _powerRemainMeta,
-          powerRemain.isAcceptableOrUnknown(
-              data['power_remain']!, _powerRemainMeta));
+          _powerBeforeChargeMeta,
+          powerBeforeCharge.isAcceptableOrUnknown(
+              data['power_before_charge']!, _powerBeforeChargeMeta));
     } else if (isInserting) {
-      context.missing(_powerRemainMeta);
+      context.missing(_powerBeforeChargeMeta);
+    }
+    if (data.containsKey('power_after_charge')) {
+      context.handle(
+          _powerAfterChargeMeta,
+          powerAfterCharge.isAcceptableOrUnknown(
+              data['power_after_charge']!, _powerAfterChargeMeta));
+    } else if (isInserting) {
+      context.missing(_powerAfterChargeMeta);
     }
     if (data.containsKey('charge_amount')) {
       context.handle(
@@ -355,10 +370,12 @@ class $ChargeOrderTable extends ChargeOrder
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       carId: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}car_id'])!,
-      drivingDistance: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}driving_distance'])!,
-      powerRemain: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}power_remain'])!,
+      drivingDistance: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}driving_distance'])!,
+      powerBeforeCharge: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}power_before_charge'])!,
+      powerAfterCharge: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}power_after_charge'])!,
       chargeAmount: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}charge_amount'])!,
       chargePrice: attachedDatabase.typeMapping
@@ -379,8 +396,9 @@ class $ChargeOrderTable extends ChargeOrder
 class ChargeOrderData extends DataClass implements Insertable<ChargeOrderData> {
   final int id;
   final int carId;
-  final int drivingDistance;
-  final int powerRemain;
+  final double drivingDistance;
+  final int powerBeforeCharge;
+  final int powerAfterCharge;
   final double chargeAmount;
   final double chargePrice;
   final double? steelConsumption;
@@ -389,7 +407,8 @@ class ChargeOrderData extends DataClass implements Insertable<ChargeOrderData> {
       {required this.id,
       required this.carId,
       required this.drivingDistance,
-      required this.powerRemain,
+      required this.powerBeforeCharge,
+      required this.powerAfterCharge,
       required this.chargeAmount,
       required this.chargePrice,
       this.steelConsumption,
@@ -399,8 +418,9 @@ class ChargeOrderData extends DataClass implements Insertable<ChargeOrderData> {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['car_id'] = Variable<int>(carId);
-    map['driving_distance'] = Variable<int>(drivingDistance);
-    map['power_remain'] = Variable<int>(powerRemain);
+    map['driving_distance'] = Variable<double>(drivingDistance);
+    map['power_before_charge'] = Variable<int>(powerBeforeCharge);
+    map['power_after_charge'] = Variable<int>(powerAfterCharge);
     map['charge_amount'] = Variable<double>(chargeAmount);
     map['charge_price'] = Variable<double>(chargePrice);
     if (!nullToAbsent || steelConsumption != null) {
@@ -415,7 +435,8 @@ class ChargeOrderData extends DataClass implements Insertable<ChargeOrderData> {
       id: Value(id),
       carId: Value(carId),
       drivingDistance: Value(drivingDistance),
-      powerRemain: Value(powerRemain),
+      powerBeforeCharge: Value(powerBeforeCharge),
+      powerAfterCharge: Value(powerAfterCharge),
       chargeAmount: Value(chargeAmount),
       chargePrice: Value(chargePrice),
       steelConsumption: steelConsumption == null && nullToAbsent
@@ -431,8 +452,9 @@ class ChargeOrderData extends DataClass implements Insertable<ChargeOrderData> {
     return ChargeOrderData(
       id: serializer.fromJson<int>(json['id']),
       carId: serializer.fromJson<int>(json['carId']),
-      drivingDistance: serializer.fromJson<int>(json['drivingDistance']),
-      powerRemain: serializer.fromJson<int>(json['powerRemain']),
+      drivingDistance: serializer.fromJson<double>(json['drivingDistance']),
+      powerBeforeCharge: serializer.fromJson<int>(json['powerBeforeCharge']),
+      powerAfterCharge: serializer.fromJson<int>(json['powerAfterCharge']),
       chargeAmount: serializer.fromJson<double>(json['chargeAmount']),
       chargePrice: serializer.fromJson<double>(json['chargePrice']),
       steelConsumption: serializer.fromJson<double?>(json['steelConsumption']),
@@ -445,8 +467,9 @@ class ChargeOrderData extends DataClass implements Insertable<ChargeOrderData> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'carId': serializer.toJson<int>(carId),
-      'drivingDistance': serializer.toJson<int>(drivingDistance),
-      'powerRemain': serializer.toJson<int>(powerRemain),
+      'drivingDistance': serializer.toJson<double>(drivingDistance),
+      'powerBeforeCharge': serializer.toJson<int>(powerBeforeCharge),
+      'powerAfterCharge': serializer.toJson<int>(powerAfterCharge),
       'chargeAmount': serializer.toJson<double>(chargeAmount),
       'chargePrice': serializer.toJson<double>(chargePrice),
       'steelConsumption': serializer.toJson<double?>(steelConsumption),
@@ -457,8 +480,9 @@ class ChargeOrderData extends DataClass implements Insertable<ChargeOrderData> {
   ChargeOrderData copyWith(
           {int? id,
           int? carId,
-          int? drivingDistance,
-          int? powerRemain,
+          double? drivingDistance,
+          int? powerBeforeCharge,
+          int? powerAfterCharge,
           double? chargeAmount,
           double? chargePrice,
           Value<double?> steelConsumption = const Value.absent(),
@@ -467,7 +491,8 @@ class ChargeOrderData extends DataClass implements Insertable<ChargeOrderData> {
         id: id ?? this.id,
         carId: carId ?? this.carId,
         drivingDistance: drivingDistance ?? this.drivingDistance,
-        powerRemain: powerRemain ?? this.powerRemain,
+        powerBeforeCharge: powerBeforeCharge ?? this.powerBeforeCharge,
+        powerAfterCharge: powerAfterCharge ?? this.powerAfterCharge,
         chargeAmount: chargeAmount ?? this.chargeAmount,
         chargePrice: chargePrice ?? this.chargePrice,
         steelConsumption: steelConsumption.present
@@ -481,7 +506,8 @@ class ChargeOrderData extends DataClass implements Insertable<ChargeOrderData> {
           ..write('id: $id, ')
           ..write('carId: $carId, ')
           ..write('drivingDistance: $drivingDistance, ')
-          ..write('powerRemain: $powerRemain, ')
+          ..write('powerBeforeCharge: $powerBeforeCharge, ')
+          ..write('powerAfterCharge: $powerAfterCharge, ')
           ..write('chargeAmount: $chargeAmount, ')
           ..write('chargePrice: $chargePrice, ')
           ..write('steelConsumption: $steelConsumption, ')
@@ -491,8 +517,8 @@ class ChargeOrderData extends DataClass implements Insertable<ChargeOrderData> {
   }
 
   @override
-  int get hashCode => Object.hash(id, carId, drivingDistance, powerRemain,
-      chargeAmount, chargePrice, steelConsumption, createdAt);
+  int get hashCode => Object.hash(id, carId, drivingDistance, powerBeforeCharge,
+      powerAfterCharge, chargeAmount, chargePrice, steelConsumption, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -500,7 +526,8 @@ class ChargeOrderData extends DataClass implements Insertable<ChargeOrderData> {
           other.id == this.id &&
           other.carId == this.carId &&
           other.drivingDistance == this.drivingDistance &&
-          other.powerRemain == this.powerRemain &&
+          other.powerBeforeCharge == this.powerBeforeCharge &&
+          other.powerAfterCharge == this.powerAfterCharge &&
           other.chargeAmount == this.chargeAmount &&
           other.chargePrice == this.chargePrice &&
           other.steelConsumption == this.steelConsumption &&
@@ -510,8 +537,9 @@ class ChargeOrderData extends DataClass implements Insertable<ChargeOrderData> {
 class ChargeOrderCompanion extends UpdateCompanion<ChargeOrderData> {
   final Value<int> id;
   final Value<int> carId;
-  final Value<int> drivingDistance;
-  final Value<int> powerRemain;
+  final Value<double> drivingDistance;
+  final Value<int> powerBeforeCharge;
+  final Value<int> powerAfterCharge;
   final Value<double> chargeAmount;
   final Value<double> chargePrice;
   final Value<double?> steelConsumption;
@@ -520,7 +548,8 @@ class ChargeOrderCompanion extends UpdateCompanion<ChargeOrderData> {
     this.id = const Value.absent(),
     this.carId = const Value.absent(),
     this.drivingDistance = const Value.absent(),
-    this.powerRemain = const Value.absent(),
+    this.powerBeforeCharge = const Value.absent(),
+    this.powerAfterCharge = const Value.absent(),
     this.chargeAmount = const Value.absent(),
     this.chargePrice = const Value.absent(),
     this.steelConsumption = const Value.absent(),
@@ -529,22 +558,25 @@ class ChargeOrderCompanion extends UpdateCompanion<ChargeOrderData> {
   ChargeOrderCompanion.insert({
     this.id = const Value.absent(),
     required int carId,
-    required int drivingDistance,
-    required int powerRemain,
+    required double drivingDistance,
+    required int powerBeforeCharge,
+    required int powerAfterCharge,
     required double chargeAmount,
     required double chargePrice,
     this.steelConsumption = const Value.absent(),
     this.createdAt = const Value.absent(),
   })  : carId = Value(carId),
         drivingDistance = Value(drivingDistance),
-        powerRemain = Value(powerRemain),
+        powerBeforeCharge = Value(powerBeforeCharge),
+        powerAfterCharge = Value(powerAfterCharge),
         chargeAmount = Value(chargeAmount),
         chargePrice = Value(chargePrice);
   static Insertable<ChargeOrderData> custom({
     Expression<int>? id,
     Expression<int>? carId,
-    Expression<int>? drivingDistance,
-    Expression<int>? powerRemain,
+    Expression<double>? drivingDistance,
+    Expression<int>? powerBeforeCharge,
+    Expression<int>? powerAfterCharge,
     Expression<double>? chargeAmount,
     Expression<double>? chargePrice,
     Expression<double>? steelConsumption,
@@ -554,7 +586,8 @@ class ChargeOrderCompanion extends UpdateCompanion<ChargeOrderData> {
       if (id != null) 'id': id,
       if (carId != null) 'car_id': carId,
       if (drivingDistance != null) 'driving_distance': drivingDistance,
-      if (powerRemain != null) 'power_remain': powerRemain,
+      if (powerBeforeCharge != null) 'power_before_charge': powerBeforeCharge,
+      if (powerAfterCharge != null) 'power_after_charge': powerAfterCharge,
       if (chargeAmount != null) 'charge_amount': chargeAmount,
       if (chargePrice != null) 'charge_price': chargePrice,
       if (steelConsumption != null) 'steel_consumption': steelConsumption,
@@ -565,8 +598,9 @@ class ChargeOrderCompanion extends UpdateCompanion<ChargeOrderData> {
   ChargeOrderCompanion copyWith(
       {Value<int>? id,
       Value<int>? carId,
-      Value<int>? drivingDistance,
-      Value<int>? powerRemain,
+      Value<double>? drivingDistance,
+      Value<int>? powerBeforeCharge,
+      Value<int>? powerAfterCharge,
       Value<double>? chargeAmount,
       Value<double>? chargePrice,
       Value<double?>? steelConsumption,
@@ -575,7 +609,8 @@ class ChargeOrderCompanion extends UpdateCompanion<ChargeOrderData> {
       id: id ?? this.id,
       carId: carId ?? this.carId,
       drivingDistance: drivingDistance ?? this.drivingDistance,
-      powerRemain: powerRemain ?? this.powerRemain,
+      powerBeforeCharge: powerBeforeCharge ?? this.powerBeforeCharge,
+      powerAfterCharge: powerAfterCharge ?? this.powerAfterCharge,
       chargeAmount: chargeAmount ?? this.chargeAmount,
       chargePrice: chargePrice ?? this.chargePrice,
       steelConsumption: steelConsumption ?? this.steelConsumption,
@@ -593,10 +628,13 @@ class ChargeOrderCompanion extends UpdateCompanion<ChargeOrderData> {
       map['car_id'] = Variable<int>(carId.value);
     }
     if (drivingDistance.present) {
-      map['driving_distance'] = Variable<int>(drivingDistance.value);
+      map['driving_distance'] = Variable<double>(drivingDistance.value);
     }
-    if (powerRemain.present) {
-      map['power_remain'] = Variable<int>(powerRemain.value);
+    if (powerBeforeCharge.present) {
+      map['power_before_charge'] = Variable<int>(powerBeforeCharge.value);
+    }
+    if (powerAfterCharge.present) {
+      map['power_after_charge'] = Variable<int>(powerAfterCharge.value);
     }
     if (chargeAmount.present) {
       map['charge_amount'] = Variable<double>(chargeAmount.value);
@@ -619,7 +657,8 @@ class ChargeOrderCompanion extends UpdateCompanion<ChargeOrderData> {
           ..write('id: $id, ')
           ..write('carId: $carId, ')
           ..write('drivingDistance: $drivingDistance, ')
-          ..write('powerRemain: $powerRemain, ')
+          ..write('powerBeforeCharge: $powerBeforeCharge, ')
+          ..write('powerAfterCharge: $powerAfterCharge, ')
           ..write('chargeAmount: $chargeAmount, ')
           ..write('chargePrice: $chargePrice, ')
           ..write('steelConsumption: $steelConsumption, ')

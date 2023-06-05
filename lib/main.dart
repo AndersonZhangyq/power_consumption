@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 
 import 'database/db.dart';
 import 'widgets/charge_order.dart';
+import 'widgets/order_list_page.dart';
+import 'widgets/charge_trend_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -58,6 +60,13 @@ class _MyHomePageState extends State<MyHomePage> {
   final _addCarFormKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _batterySizeController = TextEditingController();
+  int bottomSelectedIndex = 0;
+  PageController pageController = PageController(
+    initialPage: 0,
+    keepPage: true,
+  );
+
+  List<Widget> pageList = [];
 
   void leaveAddCarForm() {
     _nameController.clear();
@@ -201,7 +210,17 @@ class _MyHomePageState extends State<MyHomePage> {
                             if (cars.isEmpty) {
                               return const Text('No cars');
                             }
-                            selectedCar = selectedCar ?? cars[0];
+                            Future.delayed(Duration.zero, () {
+                              if (selectedCar == null) {
+                                setState(() {
+                                  selectedCar = cars[0];
+                                  pageList = [
+                                    ChargeTrendPage(db, selectedCar),
+                                    OrderListPage(db, selectedCar),
+                                  ];
+                                });
+                              }
+                            });
                             return DropdownButton<CarData>(
                               items: cars.map<DropdownMenuItem<CarData>>(
                                   (CarData value) {
@@ -214,6 +233,10 @@ class _MyHomePageState extends State<MyHomePage> {
                               onChanged: (CarData? newValue) {
                                 setState(() {
                                   selectedCar = newValue;
+                                  pageList = [
+                                    ChargeTrendPage(db, selectedCar),
+                                    OrderListPage(db, selectedCar),
+                                  ];
                                 });
                               },
                             );
@@ -235,82 +258,30 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
               ),
-              selectedCar == null
+              pageList.isEmpty
                   ? Container()
-                  : Column(
-                      children: [
-                        StreamBuilder<List<ChargeOrderData>>(
-                            stream: db.getChargeOrderList(selectedCar!.id),
-                            builder: (context, snapshot) {
-                              if (!snapshot.hasData) {
-                                return const CircularProgressIndicator();
-                              }
-                              List<ChargeOrderData> consumptions =
-                                  snapshot.data!;
-                              if (consumptions.isEmpty) {
-                                return const Text('No consumptions');
-                              }
-                              return ListView.builder(
-                                shrinkWrap: true,
-                                itemCount: consumptions.length,
-                                itemBuilder: (context, index) {
-                                  return ListTile(
-                                    onTap: () {
-                                      // Navigate to createConsumption
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                ChargeOrderWidget(
-                                                  db: db,
-                                                  selectedCar: selectedCar!,
-                                                  chargeOrder:
-                                                      consumptions[index],
-                                                )),
-                                      );
-                                    },
-                                    title: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Row(children: [
-                                            Icon(Icons.cable_rounded),
-                                            Text(
-                                                '${consumptions[index].drivingDistance.toString()} km'),
-                                          ]),
-                                          Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Icon(Icons.ev_station),
-                                              Text(
-                                                  '${consumptions[index].chargeAmount} kWh'),
-                                            ],
-                                          ),
-                                          Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Icon(Icons.attach_money),
-                                              Text(
-                                                  '${consumptions[index].chargePrice} ¥'),
-                                            ],
-                                          )
-                                        ]),
-                                    trailing: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      children: [],
-                                    ),
-                                  );
-                                },
-                              );
-                            }),
-                      ],
-                    )
+                  : Expanded(child: pageList[bottomSelectedIndex])
             ],
           ),
         ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: bottomSelectedIndex,
+        onTap: (index) {
+          setState(() {
+            bottomSelectedIndex = index;
+            // pageController.animateToPage(index,
+            //     duration: Duration(milliseconds: 500), curve: Curves.ease);
+          });
+        },
+        items: const [
+          BottomNavigationBarItem(
+              label: "trend", icon: Icon(Icons.trending_up)),
+          BottomNavigationBarItem(
+            label: "detail",
+            icon: Icon(Icons.list_alt),
+          )
+        ],
       ),
       floatingActionButton: selectedCar == null
           ? null
@@ -326,7 +297,6 @@ class _MyHomePageState extends State<MyHomePage> {
                           )),
                 );
               },
-              tooltip: 'Increment',
               child: const Icon(Icons.electrical_services),
             ), // This trailing comma makes auto-formatting nicer for build methods.
     );

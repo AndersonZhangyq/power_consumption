@@ -14,7 +14,10 @@ class ChargeOrderWidget extends StatelessWidget {
   final MyDatabase db;
   final TextEditingController drivingDistanceController =
       TextEditingController();
-  final TextEditingController powerRemainController = TextEditingController();
+  final TextEditingController powerBeforeChargeController =
+      TextEditingController();
+  final TextEditingController powerAfterChargeController =
+      TextEditingController();
   final TextEditingController chargeAmountController = TextEditingController();
   final TextEditingController chargePriceController = TextEditingController();
 
@@ -24,43 +27,89 @@ class ChargeOrderWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     if (chargeOrder != null) {
       drivingDistanceController.text = chargeOrder!.drivingDistance.toString();
-      powerRemainController.text = chargeOrder!.powerRemain.toString();
+      powerBeforeChargeController.text =
+          chargeOrder!.powerBeforeCharge.toString();
+      powerAfterChargeController.text =
+          chargeOrder!.powerAfterCharge.toString();
       chargeAmountController.text = chargeOrder!.chargeAmount.toString();
       chargePriceController.text = chargeOrder!.chargePrice.toString();
     }
     return Scaffold(
+      floatingActionButton: chargeOrder == null
+          ? null
+          : FloatingActionButton(
+              onPressed: () {
+                showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                          title: const Text('Delete Charge Order'),
+                          content: const Text(
+                              'Are you sure you want to delete this charge order?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                db.delete(db.chargeOrder).delete(chargeOrder!);
+                                Navigator.pop(context);
+                                Navigator.pop(context);
+                              },
+                              child: const Text('Delete'),
+                            ),
+                          ]);
+                    });
+              },
+              backgroundColor: Colors.red,
+              child: const Icon(Icons.delete),
+            ),
       appBar: AppBar(
-        title: Text(
-            chargeOrder == null ? 'Create ChargeOrder' : 'Modify ChargeOrder'),
+        title: Text(chargeOrder == null
+            ? 'Create Charge Order'
+            : 'Modify Charge Order'),
         actions: [
           IconButton(
             icon: const Icon(Icons.save),
             onPressed: () {
               if (_addChargeOrderFormKey.currentState!.validate()) {
-                int drivingDistance = int.parse(drivingDistanceController.text);
-                int powerRemain = int.parse(powerRemainController.text);
+                double drivingDistance =
+                    double.parse(drivingDistanceController.text);
+                int powerBeforeCharge =
+                    int.parse(powerBeforeChargeController.text);
+                int powerAfterCharge =
+                    int.parse(powerAfterChargeController.text);
                 double chargeAmount = double.parse(chargeAmountController.text);
                 double chargePrice = double.parse(chargePriceController.text);
                 if (chargeOrder == null) {
                   db.into(db.chargeOrder).insert(ChargeOrderCompanion.insert(
                       carId: selectedCar.id,
                       drivingDistance: drivingDistance,
-                      powerRemain: powerRemain,
+                      powerBeforeCharge: powerBeforeCharge,
+                      powerAfterCharge: powerAfterCharge,
                       chargeAmount: chargeAmount,
                       chargePrice: chargePrice,
-                      steelConsumption: drift.Value(chargeAmount -
-                          selectedCar.batterySize * powerRemain / 100)));
+                      steelConsumption: drift.Value(100 -
+                          selectedCar.batterySize *
+                              (powerAfterCharge - powerBeforeCharge) /
+                              chargeAmount)));
                 } else {
                   db.update(db.chargeOrder).replace(
                         ChargeOrderCompanion(
                             id: drift.Value(chargeOrder!.id),
                             carId: drift.Value(selectedCar.id),
                             drivingDistance: drift.Value(drivingDistance),
-                            powerRemain: drift.Value(powerRemain),
+                            powerBeforeCharge: drift.Value(powerBeforeCharge),
+                            powerAfterCharge: drift.Value(powerAfterCharge),
                             chargeAmount: drift.Value(chargeAmount),
                             chargePrice: drift.Value(chargePrice),
-                            steelConsumption: drift.Value(chargeAmount -
-                                selectedCar.batterySize * powerRemain / 100)),
+                            steelConsumption: drift.Value(100 -
+                                selectedCar.batterySize *
+                                    (powerAfterCharge - powerBeforeCharge) /
+                                    chargeAmount)),
                       );
                 }
                 Navigator.pop(context);
@@ -92,16 +141,30 @@ class ChargeOrderWidget extends StatelessWidget {
                         prefixIcon: Icon(Icons.cable_rounded)),
                   ),
                   TextFormField(
-                    controller: powerRemainController,
+                    controller: powerBeforeChargeController,
                     keyboardType: TextInputType.number,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter a power remain';
+                        return 'Please enter a percent of power before charge';
                       }
                       return null;
                     },
                     decoration: const InputDecoration(
-                        labelText: 'Power remain',
+                        labelText: 'Power before charge',
+                        suffixText: "%",
+                        prefixIcon: Icon(Icons.battery_4_bar)),
+                  ),
+                  TextFormField(
+                    controller: powerAfterChargeController,
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a percent of power after charge';
+                      }
+                      return null;
+                    },
+                    decoration: const InputDecoration(
+                        labelText: 'Power after charge',
                         suffixText: "%",
                         prefixIcon: Icon(Icons.battery_4_bar)),
                   ),

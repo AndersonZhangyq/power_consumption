@@ -20,9 +20,11 @@ class ChargeOrder extends Table {
 
   IntColumn get carId => integer().references(Car, #id)();
 
-  IntColumn get drivingDistance => integer()();
+  RealColumn get drivingDistance => real()();
 
-  IntColumn get powerRemain => integer()();
+  IntColumn get powerBeforeCharge => integer()();
+
+  IntColumn get powerAfterCharge => integer()();
 
   RealColumn get chargeAmount => real()();
 
