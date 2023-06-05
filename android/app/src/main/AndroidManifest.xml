@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.power_consumption">
    <application
-        android:label="power_consumption"
+        android:label="电耗"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
