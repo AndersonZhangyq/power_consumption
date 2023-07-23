@@ -15,14 +15,52 @@ class ChargeTrendPage extends StatelessWidget {
 
   const ChargeTrendPage(this.db, this.selectedCar, {super.key});
 
-  List<ChartData> getChartData(List<ChargeOrderData> consumptions) {
+  List<ChartData> getPowerConsumputionChartData(
+      List<ChargeOrderData> consumptions) {
     List<ChartData> chartData = [];
     for (int i = 0; i < consumptions.length; i++) {
+      double powerComsumption;
+      if (i == consumptions.length - 1) {
+        powerComsumption = consumptions[i].chargeAmount /
+            consumptions[i].drivingDistance *
+            100.00;
+      } else {
+        powerComsumption = (consumptions[i + 1].powerAfterCharge -
+                consumptions[i].powerBeforeCharge) /
+            (consumptions[i].powerAfterCharge -
+                consumptions[i].powerBeforeCharge) *
+            consumptions[i].chargeAmount /
+            consumptions[i].drivingDistance *
+            100.00;
+      }
+      chartData.add(ChartData(consumptions[i].createdAt, powerComsumption));
+    }
+    return chartData;
+  }
+
+  List<ChartData> getCostPerKilometerChartData(
+      List<ChargeOrderData> consumptions) {
+    List<ChartData> chartData = [];
+    for (int i = 0; i < consumptions.length; i++) {
+      double powerComsumption;
+      if (i == consumptions.length - 1) {
+        powerComsumption = consumptions[i].chargeAmount /
+            consumptions[i].drivingDistance *
+            100.00;
+      } else {
+        powerComsumption = (consumptions[i + 1].powerAfterCharge -
+                consumptions[i].powerBeforeCharge) /
+            (consumptions[i].powerAfterCharge -
+                consumptions[i].powerBeforeCharge) *
+            consumptions[i].chargeAmount /
+            consumptions[i].drivingDistance *
+            100.00;
+      }
       chartData.add(ChartData(
           consumptions[i].createdAt,
-          (consumptions[i].chargeAmount /
-              consumptions[i].drivingDistance *
-              100)));
+          consumptions[i].chargePrice /
+              consumptions[i].chargeAmount *
+              powerComsumption));
     }
     return chartData;
   }
@@ -48,6 +86,18 @@ class ChargeTrendPage extends StatelessWidget {
                             if (consumptions.isEmpty) {
                               return const Text('No consumptions');
                             }
+                            double mostRecentPowerConsumption =
+                                ((consumptions.length == 1)
+                                    ? consumptions[0].chargeAmount /
+                                        consumptions[0].drivingDistance *
+                                        100.00
+                                    : (consumptions[1].powerAfterCharge -
+                                            consumptions[0].powerBeforeCharge) /
+                                        (consumptions[0].powerAfterCharge -
+                                            consumptions[0].powerBeforeCharge) *
+                                        consumptions[0].chargeAmount /
+                                        consumptions[0].drivingDistance *
+                                        100.00);
                             return Padding(
                               padding: const EdgeInsets.all(16.0),
                               child: Column(
@@ -67,11 +117,7 @@ class ChargeTrendPage extends StatelessWidget {
                                               Row(
                                                 children: [
                                                   Text(
-                                                      (consumptions[0]
-                                                                  .chargeAmount /
-                                                              consumptions[0]
-                                                                  .drivingDistance *
-                                                              100)
+                                                      mostRecentPowerConsumption
                                                           .toStringAsFixed(2),
                                                       style: const TextStyle(
                                                           fontSize: 26,
@@ -120,7 +166,62 @@ class ChargeTrendPage extends StatelessWidget {
                                             // Renders line chart
                                             LineSeries<ChartData, DateTime>(
                                                 dataSource:
-                                                    getChartData(consumptions),
+                                                    getPowerConsumputionChartData(
+                                                        consumptions),
+                                                dataLabelMapper:
+                                                    (ChartData data, _) => data
+                                                        .y
+                                                        .toStringAsFixed(2),
+                                                dataLabelSettings:
+                                                    const DataLabelSettings(
+                                                        // Renders the data label
+                                                        isVisible: true),
+                                                markerSettings:
+                                                    const MarkerSettings(
+                                                        isVisible: true),
+                                                xValueMapper:
+                                                    (ChartData data, _) =>
+                                                        data.x,
+                                                yValueMapper:
+                                                    (ChartData data, _) =>
+                                                        data.y)
+                                          ]),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 8.0),
+                                    child: SizedBox(
+                                      width: double.infinity,
+                                      height: 300,
+                                      child: SfCartesianChart(
+                                          title: ChartTitle(
+                                              text: '百公里费用变化曲线',
+                                              textStyle: TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.bold)),
+                                          zoomPanBehavior: ZoomPanBehavior(
+                                              // Enables pinch zooming
+                                              enablePinching: true,
+                                              enableMouseWheelZooming: true,
+                                              zoomMode: ZoomMode.x,
+                                              enablePanning: true),
+                                          trackballBehavior: TrackballBehavior(
+                                              // Enables the trackball
+                                              enable: true,
+                                              tooltipSettings:
+                                                  const InteractiveTooltip(
+                                                      enable: true,
+                                                      color: Colors.red)),
+                                          primaryXAxis: DateTimeAxis(),
+                                          primaryYAxis: NumericAxis(
+                                              anchorRangeToVisiblePoints:
+                                                  false),
+                                          series: <ChartSeries>[
+                                            // Renders line chart
+                                            LineSeries<ChartData, DateTime>(
+                                                dataSource:
+                                                    getCostPerKilometerChartData(
+                                                        consumptions),
                                                 dataLabelMapper:
                                                     (ChartData data, _) => data
                                                         .y

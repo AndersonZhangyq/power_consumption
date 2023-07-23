@@ -109,7 +109,8 @@ class ChargeOrderWidget extends StatelessWidget {
                             steelConsumption: drift.Value(100 -
                                 selectedCar.batterySize *
                                     (powerAfterCharge - powerBeforeCharge) /
-                                    chargeAmount)),
+                                    chargeAmount),
+                            createdAt: drift.Value(chargeOrder!.createdAt)),
                       );
                 }
                 Navigator.pop(context);
