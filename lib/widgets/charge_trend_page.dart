@@ -20,6 +20,7 @@ class ChargeTrendPage extends StatelessWidget {
     List<ChartData> chartData = [];
     for (int i = 0; i < consumptions.length; i++) {
       double powerComsumption;
+      if (consumptions[i].drivingDistance == 0) continue;
       if (i == consumptions.length - 1) {
         powerComsumption = consumptions[i].chargeAmount /
             consumptions[i].drivingDistance *
@@ -43,6 +44,7 @@ class ChargeTrendPage extends StatelessWidget {
     List<ChartData> chartData = [];
     for (int i = 0; i < consumptions.length; i++) {
       double powerComsumption;
+      if (consumptions[i].drivingDistance == 0) continue;
       if (i == consumptions.length - 1) {
         powerComsumption = consumptions[i].chargeAmount /
             consumptions[i].drivingDistance *
@@ -86,11 +88,16 @@ class ChargeTrendPage extends StatelessWidget {
                             if (consumptions.isEmpty) {
                               return const Text('No consumptions');
                             }
-                            double mostRecentPowerConsumption =
-                                ((consumptions.length == 1)
-                                    ? consumptions[0].chargeAmount /
+                            double mostRecentPowerConsumption = ((consumptions
+                                        .length ==
+                                    1)
+                                ? consumptions[0].drivingDistance == 0
+                                    ? 0
+                                    : consumptions[0].chargeAmount /
                                         consumptions[0].drivingDistance *
                                         100.00
+                                : consumptions[0].drivingDistance == 0
+                                    ? 0
                                     : (consumptions[1].powerAfterCharge -
                                             consumptions[0].powerBeforeCharge) /
                                         (consumptions[0].powerAfterCharge -

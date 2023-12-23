@@ -36,12 +36,16 @@ class OrderListPage extends StatelessWidget {
                               ChargeOrderData order = consumptions[index];
                               double powerComsumption;
                               if (index == consumptions.length - 1) {
-                                powerComsumption = order.chargeAmount /
-                                    order.drivingDistance *
-                                    100.00;
+                                powerComsumption = order.drivingDistance == 0
+                                    ? 0
+                                    : order.chargeAmount /
+                                        order.drivingDistance *
+                                        100.00;
                               } else {
-                                powerComsumption =
-                                    (consumptions[index + 1].powerAfterCharge -
+                                powerComsumption = order.drivingDistance == 0
+                                    ? 0
+                                    : (consumptions[index + 1]
+                                                .powerAfterCharge -
                                             order.powerBeforeCharge) /
                                         (order.powerAfterCharge -
                                             order.powerBeforeCharge) *
