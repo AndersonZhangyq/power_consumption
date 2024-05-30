@@ -154,7 +154,20 @@ class OrderListPage extends StatelessWidget {
                                               '${order.powerAfterCharge}%',
                                               style: const TextStyle(
                                                   color: Colors.lightBlue),
-                                            )
+                                            ),
+                                            const Spacer(),
+                                            Text(
+                                                '${order.steelConsumption!.toStringAsFixed(2)}% ',
+                                                style: const TextStyle(
+                                                    color: Colors.pink)),
+                                            Text(
+                                                '(${(selectedCar!.batterySize * (order.powerAfterCharge - order.powerBeforeCharge) / 100).toStringAsFixed(2)}'),
+                                            const Icon(
+                                              Icons.add,
+                                              size: 16,
+                                            ),
+                                            Text(
+                                                '${(order.chargeAmount * order.steelConsumption! / 100).toStringAsFixed(2)})')
                                           ],
                                         ),
                                       ),
