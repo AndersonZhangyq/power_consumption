@@ -56,7 +56,7 @@ class MyDatabase extends _$MyDatabase {
   // you should bump this number whenever you change or add a table definition. Migrations
   // are covered later in this readme.
   @override
-  int get schemaVersion => 0;
+  int get schemaVersion => 1;
 
   @override
   MigrationStrategy get migration {

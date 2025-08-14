@@ -1,10 +1,11 @@
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
+import 'package:power_consumption/moneyNumberTablet.dart';
 
 import '../database/db.dart';
 
-class ChargeOrderWidget extends StatelessWidget {
-  ChargeOrderWidget(
+class ChargeOrderWidget extends StatefulWidget {
+  const ChargeOrderWidget(
       {super.key,
       required this.selectedCar,
       required this.db,
@@ -12,30 +13,46 @@ class ChargeOrderWidget extends StatelessWidget {
   final CarData selectedCar;
   final ChargeOrderData? chargeOrder;
   final MyDatabase db;
+
+  @override
+  State<ChargeOrderWidget> createState() => _ChargeOrderWidgetState();
+}
+
+class _ChargeOrderWidgetState extends State<ChargeOrderWidget> {
   final TextEditingController drivingDistanceController =
       TextEditingController();
+
   final TextEditingController powerBeforeChargeController =
       TextEditingController();
+
   final TextEditingController powerAfterChargeController =
       TextEditingController();
+
   final TextEditingController chargeAmountController = TextEditingController();
+
   final TextEditingController chargePriceController = TextEditingController();
 
   final _addChargeOrderFormKey = GlobalKey<FormState>();
 
   @override
-  Widget build(BuildContext context) {
-    if (chargeOrder != null) {
-      drivingDistanceController.text = chargeOrder!.drivingDistance.toString();
+  void initState() {
+    super.initState();
+    if (widget.chargeOrder != null) {
+      drivingDistanceController.text =
+          widget.chargeOrder!.drivingDistance.toString();
       powerBeforeChargeController.text =
-          chargeOrder!.powerBeforeCharge.toString();
+          widget.chargeOrder!.powerBeforeCharge.toString();
       powerAfterChargeController.text =
-          chargeOrder!.powerAfterCharge.toString();
-      chargeAmountController.text = chargeOrder!.chargeAmount.toString();
-      chargePriceController.text = chargeOrder!.chargePrice.toString();
+          widget.chargeOrder!.powerAfterCharge.toString();
+      chargeAmountController.text = widget.chargeOrder!.chargeAmount.toString();
+      chargePriceController.text = widget.chargeOrder!.chargePrice.toString();
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: chargeOrder == null
+      floatingActionButton: widget.chargeOrder == null
           ? null
           : FloatingActionButton(
               onPressed: () {
@@ -55,7 +72,9 @@ class ChargeOrderWidget extends StatelessWidget {
                             ),
                             TextButton(
                               onPressed: () {
-                                db.delete(db.chargeOrder).delete(chargeOrder!);
+                                widget.db
+                                    .delete(widget.db.chargeOrder)
+                                    .delete(widget.chargeOrder!);
                                 Navigator.pop(context);
                                 Navigator.pop(context);
                               },
@@ -68,7 +87,7 @@ class ChargeOrderWidget extends StatelessWidget {
               child: const Icon(Icons.delete),
             ),
       appBar: AppBar(
-        title: Text(chargeOrder == null
+        title: Text(widget.chargeOrder == null
             ? 'Create Charge Order'
             : 'Modify Charge Order'),
         actions: [
@@ -84,33 +103,35 @@ class ChargeOrderWidget extends StatelessWidget {
                     int.parse(powerAfterChargeController.text);
                 double chargeAmount = double.parse(chargeAmountController.text);
                 double chargePrice = double.parse(chargePriceController.text);
-                if (chargeOrder == null) {
-                  db.into(db.chargeOrder).insert(ChargeOrderCompanion.insert(
-                      carId: selectedCar.id,
-                      drivingDistance: drivingDistance,
-                      powerBeforeCharge: powerBeforeCharge,
-                      powerAfterCharge: powerAfterCharge,
-                      chargeAmount: chargeAmount,
-                      chargePrice: chargePrice,
-                      steelConsumption: drift.Value(100 -
-                          selectedCar.batterySize *
-                              (powerAfterCharge - powerBeforeCharge) /
-                              chargeAmount)));
+                if (widget.chargeOrder == null) {
+                  widget.db.into(widget.db.chargeOrder).insert(
+                      ChargeOrderCompanion.insert(
+                          carId: widget.selectedCar.id,
+                          drivingDistance: drivingDistance,
+                          powerBeforeCharge: powerBeforeCharge,
+                          powerAfterCharge: powerAfterCharge,
+                          chargeAmount: chargeAmount,
+                          chargePrice: chargePrice,
+                          steelConsumption: drift.Value(100 -
+                              widget.selectedCar.batterySize *
+                                  (powerAfterCharge - powerBeforeCharge) /
+                                  chargeAmount)));
                 } else {
-                  db.update(db.chargeOrder).replace(
+                  widget.db.update(widget.db.chargeOrder).replace(
                         ChargeOrderCompanion(
-                            id: drift.Value(chargeOrder!.id),
-                            carId: drift.Value(selectedCar.id),
+                            id: drift.Value(widget.chargeOrder!.id),
+                            carId: drift.Value(widget.selectedCar.id),
                             drivingDistance: drift.Value(drivingDistance),
                             powerBeforeCharge: drift.Value(powerBeforeCharge),
                             powerAfterCharge: drift.Value(powerAfterCharge),
                             chargeAmount: drift.Value(chargeAmount),
                             chargePrice: drift.Value(chargePrice),
                             steelConsumption: drift.Value(100 -
-                                selectedCar.batterySize *
+                                widget.selectedCar.batterySize *
                                     (powerAfterCharge - powerBeforeCharge) /
                                     chargeAmount),
-                            createdAt: drift.Value(chargeOrder!.createdAt)),
+                            createdAt:
+                                drift.Value(widget.chargeOrder!.createdAt)),
                       );
                 }
                 Navigator.pop(context);
@@ -171,7 +192,43 @@ class ChargeOrderWidget extends StatelessWidget {
                   ),
                   TextFormField(
                     controller: chargeAmountController,
-                    keyboardType: TextInputType.number,
+                    keyboardType: TextInputType.none,
+                    onTap: () {
+                      showModalBottomSheet(
+                          enableDrag: false,
+                          context: context,
+                          builder: (context) {
+                            ValueNotifier<String> strNotifier =
+                                ValueNotifier(chargeAmountController.text);
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ValueListenableBuilder(
+                                    valueListenable: strNotifier,
+                                    builder: (context, data, _) {
+                                      return Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text(
+                                          data,
+                                          style: const TextStyle(
+                                            fontSize: 24,
+                                          ),
+                                        ),
+                                      );
+                                    }),
+                                MoneyNumberTablet(
+                                    moneyController: chargeAmountController,
+                                    callback: (text) {
+                                      setState(() {
+                                        chargeAmountController.text = text;
+                                        strNotifier.value = text;
+                                      });
+                                    }),
+                              ],
+                            );
+                          });
+                    },
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter a charge amount';
@@ -185,7 +242,46 @@ class ChargeOrderWidget extends StatelessWidget {
                   ),
                   TextFormField(
                     controller: chargePriceController,
-                    keyboardType: TextInputType.number,
+                    keyboardType: TextInputType.none,
+                    onTap: () {
+                      showModalBottomSheet(
+                          enableDrag: false,
+                          context: context,
+                          builder: (context) {
+                            ValueNotifier<String> strNotifier =
+                                ValueNotifier(chargePriceController.text);
+                            return Padding(
+                              padding: const EdgeInsets.all(4.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ValueListenableBuilder(
+                                      valueListenable: strNotifier,
+                                      builder: (context, data, _) {
+                                        return Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Text(
+                                            data,
+                                            style: const TextStyle(
+                                              fontSize: 24,
+                                            ),
+                                          ),
+                                        );
+                                      }),
+                                  MoneyNumberTablet(
+                                      moneyController: chargePriceController,
+                                      callback: (text) {
+                                        setState(() {
+                                          chargePriceController.text = text;
+                                          strNotifier.value = text;
+                                        });
+                                      }),
+                                ],
+                              ),
+                            );
+                          });
+                    },
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter a charge price';
